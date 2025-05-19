@@ -1,53 +1,52 @@
+import json
 import spacy
-from spacy.tokens import Span
 
-# Load both models
-nlp_wide = spacy.load("en_core_sci_scibert")          # High recall, low specificity
-nlp_specific = spacy.load("en_ner_bionlp13cg_md")     # Low recall, high specificity
+print("🔁 Loading models...")
+nlp_scibert = spacy.load("en_core_sci_scibert")          
+nlp_bionlp = spacy.load("en_ner_bionlp13cg_md")          
 
-def hybrid_ner(text):
-    # Step 1: Extract entities using wide model
-    doc_wide = nlp_wide(text)
-    spans = list(doc_wide.ents)
+def relabel_entity(entity_text, bionlp_doc):
+    """Look for entity_text in bionlp_doc and return the most specific label."""
+    for ent in bionlp_doc.ents:
+        if ent.text.lower() == entity_text.lower():
+            return ent.label_
+    return "ENTITY"
 
-    # Step 2: Use specific model to label each span
-    labeled_ents = []
-    for span in spans:
-        # Run the specific model just on the span text
-        subdoc = nlp_specific(span.text)
-        if subdoc.ents:
-            # If it finds a specific label, use it
-            labeled_ent = {
-                "text": span.text,
-                "label": subdoc.ents[0].label_,
-                "start_char": span.start_char,
-                "end_char": span.end_char
-            }
-        else:
-            # Otherwise fallback to generic "ENTITY"
-            labeled_ent = {
-                "text": span.text,
-                "label": "ENTITY",
-                "start_char": span.start_char,
-                "end_char": span.end_char
-            }
-        labeled_ents.append(labeled_ent)
+def extract_entities(text):
+    """Extract from sci_scibert and relabel from bionlp."""
+    doc_scibert = nlp_scibert(text)
+    doc_bionlp = nlp_bionlp(text)
 
-    return labeled_ents
+    unique = set()
+    entities = []
+    for ent in doc_scibert.ents:
+        if ent.text.lower() in unique:
+            continue
+        unique.add(ent.text.lower())
+        label = relabel_entity(ent.text, doc_bionlp)
+        entities.append({
+            "text": ent.text,
+            "label": label,
+            "start_char": ent.start_char,
+            "end_char": ent.end_char
+        })
+    return entities
 
-# Test abstract
-abstract = """
-Major depressive disorder (MDD) is a common mental health condition characterized by persistent sadness, 
-loss of interest in activities, and cognitive impairments. Advances in neuroimaging have enabled researchers 
-to identify brain regions such as the prefrontal cortex and amygdala as key areas implicated in MDD. 
-This study investigates the correlation between serotonin levels and structural changes in the hippocampus 
-of individuals diagnosed with MDD.
-"""
+with open("data/parsed/parsed_articles.json", "r") as f:
+    articles = json.load(f)
 
-# Run hybrid NER
-entities = hybrid_ner(abstract)
+output = []
+print(f"🔍 Processing {len(articles)} articles...")
+for article in articles:
+    abstract = article.get("abstract", "")
+    entities = extract_entities(abstract)
+    output.append({
+        "title": article.get("title"),
+        "abstract": abstract,
+        "entities": entities
+    })
 
-# Print output
-print("🧠 Hybrid Named Entities:\n")
-for ent in entities:
-    print(f"→ {ent['text']}  |  Label: {ent['label']}")
+with open("data/ner/ner_output_hybrid.json", "w") as f:
+    json.dump(output, f, indent=2)
+
+print("✅ Done! Output written to ner_output_hybrid.json")

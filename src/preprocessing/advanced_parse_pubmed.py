@@ -1,6 +1,4 @@
-# Step 2: Preprocessing
-# This script is used to parse the full-text PMC articles and save the parsed data to a JSON file
-
+import os
 import os
 import json
 import xml.etree.ElementTree as ET
@@ -34,15 +32,12 @@ def parse_article(xml_file_path):
         abstract_el = article_meta.find('./abstract')
         body_el = root.find('.//body')
 
-        # DOI, PMID, PMC
         doi_el = article_meta.find('./article-id[@pub-id-type="doi"]')
         pmid_el = article_meta.find('./article-id[@pub-id-type="pmid"]')
         pmc_el = article_meta.find('./article-id[@pub-id-type="pmc"]')
 
-        # Journal
         journal_el = root.find('.//journal-title')
 
-        # Publication date (use pub-date/year/month/day if available)
         pub_date_el = article_meta.find('./pub-date')
         pub_date = ''
         if pub_date_el is not None:
@@ -52,10 +47,8 @@ def parse_article(xml_file_path):
             parts = [get_text_from_element(p) for p in [year, month, day] if p is not None]
             pub_date = '-'.join(parts)
 
-        # Keywords
         keywords = [get_text_from_element(kw) for kw in article_meta.findall('.//kwd')]
 
-        # Authors
         authors = []
         for contrib in article_meta.findall('.//contrib[@contrib-type="author"]'):
             name_el = contrib.find('./name')
@@ -65,7 +58,6 @@ def parse_article(xml_file_path):
                 full_name = f"{given_names} {surname}".strip()
                 authors.append(full_name)
 
-        # Affiliations
         affiliations = [get_text_from_element(aff) for aff in article_meta.findall('.//aff')]
 
         return {
@@ -99,7 +91,7 @@ def parse_directory(input_dir):
     return parsed_articles
 
 if __name__ == '__main__':
-    input_directory = 'data/pmc'  # <-- change this to your folder
+    input_directory = 'data/pmc'
     output_file = 'data/parsed/parsed_articles.json'
 
     results = parse_directory(input_directory)

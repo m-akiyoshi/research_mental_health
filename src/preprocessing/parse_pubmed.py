@@ -1,6 +1,4 @@
-# parse_pmc_xml.py
 
-import os
 import json
 from lxml import etree
 from pathlib import Path
@@ -22,7 +20,6 @@ def parse_pmc_xml(file_path):
     pmc = extract_text(soup.find("article-id", {"pub-id-type": "pmc"}))
     journal = extract_text(soup.find("journal-title"))
 
-    # Metadata
     pub_date_tag = soup.find("pub-date", {"pub-type": "epub"})
     pub_date = {
         "day": extract_text(pub_date_tag.find("day")),
@@ -30,14 +27,11 @@ def parse_pmc_xml(file_path):
         "year": extract_text(pub_date_tag.find("year")),
     } if pub_date_tag else None
 
-    # Extract abstract
     abstract = soup.find("abstract")
     abstract_text = " ".join([extract_text(p) for p in abstract.find_all("p")]) if abstract else None
 
-    # Extract keywords
     keywords = [extract_text(k) for k in soup.find_all("kwd")]
 
-    # Extract authors
     authors = []
     for contrib in soup.find_all("contrib", {"contrib-type": "author"}):
         name = contrib.find("name")
@@ -47,7 +41,6 @@ def parse_pmc_xml(file_path):
             full_name = f"{given} {surname}".strip()
             authors.append(full_name)
 
-    # Extract affiliations
     affiliations = {}
     for aff in soup.find_all("aff"):
         aff_id = aff.get("id")
@@ -60,7 +53,6 @@ def parse_pmc_xml(file_path):
             "email": email
         }
 
-    # Combine into structured JSON
     article_data = {
         "title": title,
         "doi": doi,
@@ -88,7 +80,6 @@ def parse_directory(input_dir, output_file):
         except Exception as e:
             print(f"❌ Failed to parse {xml_file.name}: {e}")
 
-    # Create output directory if it doesn't exist
     output_path = Path(output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -97,5 +88,4 @@ def parse_directory(input_dir, output_file):
 
     print(f"\n✅ Parsed {len(parsed)} articles and saved to {output_file}")
 
-# Example usage
 parse_directory("data/pmc", "data/parsed/parsed_articles.json")

@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 import sys
 from Bio import Entrez
-
-# Insert SSL workaround to bypass certificate verification
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
+from dotenv import load_dotenv
+import os
 
-# Set your email address (NCBI requires it for API use)
-Entrez.email = "mai.akiyoshi@gmail.com"
+load_dotenv()
+Entrez.email = os.getenv('NCBI_EMAIL')
 
 def search_pubmed(query, max_results=100):
     """
@@ -31,9 +30,7 @@ def fetch_pubmed_data(id_list):
     if not id_list:
         return None
     try:
-        # Join the IDs into a comma-separated string
         ids = ",".join(id_list)
-        # Fetch the data in XML format for easier parsing
         handle = Entrez.efetch(db="pubmed", id=ids, rettype="xml", retmode="text")
         data = handle.read()
         handle.close()
@@ -43,23 +40,16 @@ def fetch_pubmed_data(id_list):
         return None
 
 def main():
-    # Define your query; you can modify or extend it for different aspects (e.g., therapy guidelines, case studies, etc.)
     query = "mental health therapy guidelines"
     
-    # Allow overriding the default query via command line
     if len(sys.argv) > 1:
         query = " ".join(sys.argv[1:])
     
-    # Step 1: Search PubMed
     id_list = search_pubmed(query, max_results=100)
     
-    # Step 2: Fetch data for found articles
     data = fetch_pubmed_data(id_list)
 
-    
-    
-    # Write the XML data to a file for inspection
-    if data and data.strip():  # Check if data is not empty
+    if data and data.strip():
         output_file = "data/pubmed/results.xml"
         try:
             with open(output_file, "w", encoding="utf-8") as f:

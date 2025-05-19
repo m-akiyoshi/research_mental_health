@@ -1,20 +1,14 @@
-# Step 1: Data sourcing
-
-# This script is used to fetch full-text PMC articles from NCBI
-# It uses the Entrez API to search for articles and fetch the full-text XML
-# It then saves the XML files to the data/pmc directory
-
-
 from Bio import Entrez
 from pathlib import Path
 from tqdm import tqdm
 import time
-import requests
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
+from dotenv import load_dotenv
+import os
 
-# Set your email address (NCBI requires it for API use)
-Entrez.email = "mai.akiyoshi@gmail.com"
+load_dotenv()
+Entrez.email = os.getenv('NCBI_EMAIL')
 
 def search_pmc(query, max_results=50):
     handle = Entrez.esearch(
@@ -49,7 +43,7 @@ def fetch_full_pmc_articles(query, max_results=50):
         file_path = output_dir / f"{pmcid}.xml"
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(xml_data.decode('utf-8'))
-        time.sleep(0.5)  # be polite to NCBI
+        time.sleep(0.5)
 
     print(f"✅ Downloaded {len(pmc_ids)} full-text XML articles to {output_dir}")
 
