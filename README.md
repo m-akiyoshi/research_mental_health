@@ -24,6 +24,8 @@ The system follows a multi-step pipeline:
    - Extracts relationships between entities
    - Uses REBEL model for relation extraction
 
+### To be implemented
+
 4. **Knowledge Graph**
 
    - Constructs graph representation of mental health concepts
