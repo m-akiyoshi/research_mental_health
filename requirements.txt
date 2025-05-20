@@ -1,0 +1,23 @@
+# Core dependencies
+numpy>=1.24.3
+pandas>=2.0.2
+torch>=2.0.1
+transformers>=4.30.2
+
+# NLP and Text Processing
+spacy>=3.5.0
+en-core-sci-scibert @ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_core_sci_scibert-0.5.3.tar.gz
+en-ner-bionlp13cg-md @ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_ner_bionlp13cg_md-0.5.3.tar.gz
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Data Processing and Utilities
+tqdm>=4.65.0
+python-dotenv>=1.0.0
+biopython>=1.81  # For Entrez API access
+
+# File Handling
+pathlib>=1.0.1
+
+# Optional but recommended
+scikit-learn>=1.2.2  # For any machine learning tasks
